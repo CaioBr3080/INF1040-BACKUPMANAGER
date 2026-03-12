@@ -1,19 +1,112 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36" version="29.6.1">
   <diagram name="Página-1" id="AEwiiLhhyVKthItKLLMg">
-    <mxGraphModel dx="1213" dy="783" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1155" dy="746" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="wrR0WuzLVmu_qgapBrQ0-4" edge="1" parent="1" source="wrR0WuzLVmu_qgapBrQ0-3" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="wrR0WuzLVmu_qgapBrQ0-5">
+        <mxCell id="wrR0WuzLVmu_qgapBrQ0-4" edge="1" parent="1" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="414" y="240" as="targetPoint" />
+            <mxPoint x="314" y="330" as="sourcePoint" />
+            <mxPoint x="314" y="390" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="wrR0WuzLVmu_qgapBrQ0-3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Usuário" vertex="1">
-          <mxGeometry height="40" width="129" x="349.5" y="90" as="geometry" />
+          <mxGeometry height="40" width="129" x="250.5" y="290" as="geometry" />
         </mxCell>
-        <mxCell id="wrR0WuzLVmu_qgapBrQ0-5" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="" vertex="1">
-          <mxGeometry height="130" width="114" x="357" y="250" as="geometry" />
+        <mxCell id="wrR0WuzLVmu_qgapBrQ0-9" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="413.79999999999995" y="510" />
+              <mxPoint x="213.8" y="510" />
+            </Array>
+            <mxPoint x="413.79999999999995" y="510" as="sourcePoint" />
+            <mxPoint x="213.8" y="580" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wrR0WuzLVmu_qgapBrQ0-26" connectable="0" parent="wrR0WuzLVmu_qgapBrQ0-9" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Chama funções" vertex="1">
+          <mxGeometry relative="1" x="0.7333" y="-1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wrR0WuzLVmu_qgapBrQ0-12" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="413.79999999999995" y="530" />
+            </Array>
+            <mxPoint x="413.79999999999995" y="510" as="sourcePoint" />
+            <mxPoint x="413.79999999999995" y="580" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wrR0WuzLVmu_qgapBrQ0-25" connectable="0" parent="wrR0WuzLVmu_qgapBrQ0-12" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Lê configurações" vertex="1">
+          <mxGeometry relative="1" x="-0.1886" y="-1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wrR0WuzLVmu_qgapBrQ0-14" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Controle App&amp;nbsp;&lt;div&gt;(main.py)&lt;/div&gt;" vertex="1">
+          <mxGeometry height="70" width="170" x="230" y="390" as="geometry" />
+        </mxCell>
+        <mxCell id="wrR0WuzLVmu_qgapBrQ0-16" edge="1" parent="1" style="endArrow=none;html=1;rounded=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" target="wrR0WuzLVmu_qgapBrQ0-14" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="315" y="510" as="sourcePoint" />
+            <mxPoint x="340" y="420" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wrR0WuzLVmu_qgapBrQ0-17" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="location_config.py&lt;div&gt;(gerencia configurações de local e tempo backups)&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;job&#39;s&lt;br&gt;source&lt;br&gt;destination&lt;br&gt;rules&lt;/div&gt;" vertex="1">
+          <mxGeometry height="140" width="140" x="150" y="580" as="geometry" />
+        </mxCell>
+        <mxCell id="wrR0WuzLVmu_qgapBrQ0-18" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="app_config.py&lt;br&gt;(gerencia configurações do app)" vertex="1">
+          <mxGeometry height="120" width="120" x="350" y="580" as="geometry" />
+        </mxCell>
+        <mxCell id="wrR0WuzLVmu_qgapBrQ0-19" edge="1" parent="1" source="wrR0WuzLVmu_qgapBrQ0-17" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.438;entryY=-0.017;entryDx=0;entryDy=0;entryPerimeter=0;" target="wrR0WuzLVmu_qgapBrQ0-20" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="260" y="760" as="sourcePoint" />
+            <mxPoint x="210" y="760" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wrR0WuzLVmu_qgapBrQ0-27" connectable="0" parent="wrR0WuzLVmu_qgapBrQ0-19" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Verificar arquivos" vertex="1">
+          <mxGeometry relative="1" x="-0.28" y="-2" as="geometry">
+            <mxPoint x="2" y="12" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wrR0WuzLVmu_qgapBrQ0-20" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="backup_config.py&lt;br&gt;(regras de&lt;br&gt;filtragem)&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&lt;div&gt;Regras&lt;/div&gt;&lt;div&gt;&amp;nbsp; allowed_types&lt;/div&gt;&lt;div&gt;&amp;nbsp; ignored_types&lt;/div&gt;&lt;div&gt;&amp;nbsp;max_size&lt;/div&gt;&lt;div&gt;&amp;nbsp;ignored_names&lt;/div&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="150" width="160" x="150" y="800" as="geometry" />
+        </mxCell>
+        <mxCell id="wrR0WuzLVmu_qgapBrQ0-24" edge="1" parent="1" source="wrR0WuzLVmu_qgapBrQ0-14" style="endArrow=classic;html=1;rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=-0.022;entryY=0.599;entryDx=0;entryDy=0;entryPerimeter=0;" target="wrR0WuzLVmu_qgapBrQ0-20" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="90" y="425" />
+              <mxPoint x="90" y="620" />
+              <mxPoint x="90" y="890" />
+            </Array>
+            <mxPoint x="280" y="670" as="sourcePoint" />
+            <mxPoint x="60" y="820" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wrR0WuzLVmu_qgapBrQ0-28" connectable="0" parent="wrR0WuzLVmu_qgapBrQ0-24" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Envia eventos&lt;div&gt;(Config interface)&lt;/div&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.1193" y="3" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wrR0WuzLVmu_qgapBrQ0-29" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="&lt;div&gt;&lt;font style=&quot;font-size: 14px;&quot;&gt;&lt;b&gt;Fluxo de Execução&lt;/b&gt;&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;Usuário&lt;/div&gt;&lt;div&gt;&amp;nbsp; ↓&lt;/div&gt;&lt;div&gt;main&lt;/div&gt;&lt;div&gt;&amp;nbsp; ↓&lt;/div&gt;&lt;div&gt;location_config.add_job()&lt;/div&gt;&lt;div&gt;&amp;nbsp; ↓&lt;/div&gt;&lt;div&gt;location_config.run_job()&lt;/div&gt;&lt;div&gt;&amp;nbsp; ↓&lt;/div&gt;&lt;div&gt;scan diretório origem&lt;/div&gt;&lt;div&gt;&amp;nbsp; ↓&lt;/div&gt;&lt;div&gt;backup_config.file_allowed()&lt;/div&gt;&lt;div&gt;&amp;nbsp; ↓&lt;/div&gt;&lt;div&gt;Feedback pra main.py&lt;/div&gt;&lt;div&gt;&amp;nbsp;↓&lt;/div&gt;&lt;div&gt;True → copiar arquivo&lt;/div&gt;&lt;div&gt;False → ignorar&lt;/div&gt;&lt;div&gt;&amp;nbsp; ↓&lt;/div&gt;&lt;div&gt;resultado do backup&lt;/div&gt;&lt;div&gt;&amp;nbsp; ↓&lt;/div&gt;&lt;div&gt;main mostra estatísticas&lt;/div&gt;" vertex="1">
+          <mxGeometry height="420" width="210" x="600" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="wrR0WuzLVmu_qgapBrQ0-30" edge="1" parent="1" source="wrR0WuzLVmu_qgapBrQ0-20" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1.017;entryY=0.39;entryDx=0;entryDy=0;entryPerimeter=0;" target="wrR0WuzLVmu_qgapBrQ0-14" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="530" y="875" />
+              <mxPoint x="530" y="417" />
+            </Array>
+            <mxPoint x="370" y="580" as="sourcePoint" />
+            <mxPoint x="530" y="380" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wrR0WuzLVmu_qgapBrQ0-31" connectable="0" parent="wrR0WuzLVmu_qgapBrQ0-30" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Retorna parâmetros&lt;div&gt;(Função)&amp;nbsp;&lt;/div&gt;" vertex="1">
+          <mxGeometry relative="1" x="0.1797" y="2" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wrR0WuzLVmu_qgapBrQ0-32" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="&lt;div&gt;&lt;font style=&quot;font-size: 13px;&quot;&gt;&lt;b&gt;Fluxo Entre Módulos&lt;/b&gt;&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&lt;div&gt;main&lt;/div&gt;&lt;div&gt;&amp;nbsp;│&lt;/div&gt;&lt;div&gt;&amp;nbsp; cria e gerencia backups&lt;/div&gt;&lt;div&gt;&amp;nbsp;▼&lt;/div&gt;&lt;div&gt;location_config&lt;/div&gt;&lt;div&gt;&amp;nbsp;│&lt;/div&gt;&lt;div&gt;&amp;nbsp; pede validação de arquivos&lt;/div&gt;&lt;div&gt;&amp;nbsp;▼&lt;/div&gt;&lt;div&gt;backup_config&lt;/div&gt;&lt;div&gt;&amp;nbsp;│&lt;/div&gt;&lt;div&gt;&amp;nbsp; retorna True / False&lt;/div&gt;&lt;div&gt;&amp;nbsp;▼&lt;/div&gt;&lt;div&gt;location_config&lt;/div&gt;&lt;div&gt;&amp;nbsp;│&lt;/div&gt;&lt;div&gt;&amp;nbsp; copia arquivos&lt;/div&gt;&lt;div&gt;&amp;nbsp;▼&lt;/div&gt;&lt;div&gt;resultado&lt;/div&gt;&lt;div&gt;&amp;nbsp;│&lt;/div&gt;&lt;div&gt;&amp;nbsp;▼&lt;/div&gt;&lt;div&gt;main&lt;/div&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="420" width="210" x="600" y="580" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
