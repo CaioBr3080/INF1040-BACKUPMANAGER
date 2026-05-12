@@ -1,10 +1,10 @@
-Projeto em Python para gerenciar perfis de backup de arquivos, com suporte a copia ou movimentacao de arquivos, filtros e historico de execucao.
+Projeto em Python para gerenciar perfis de backup de arquivos, com suporte a copia ou movimentação de arquivos, filtros e historico de execução.
 
 ## Recursos
 
 - Cadastro de perfis de backup.
-- Configuracao de pastas de origem e destino.
-- Operacoes de copiar ou mover arquivos.
+- Configuração de pastas de origem e destino.
+- Operções de copiar ou mover arquivos.
 - Filtros por nome, extensao, tamanho e data de modificacao.
 - Historico das execucoes.
 - Testes automatizados com `pytest`.
@@ -46,6 +46,6 @@ data/                 Arquivos locais de configuracao e historico
 preview_interface.py  Prototipo visual da interface
 ```
 
-## Observacao
+## Observação
 
-Os arquivos JSON dentro de `data/` sao dados locais de uso da aplicacao e nao sao versionados.
+Os arquivos JSON dentro de `data/` sao dados locais de uso da aplicaçãao e nao são versionados.
