@@ -1,13 +1,17 @@
-Projeto em Python para gerenciar perfis de backup de arquivos, com suporte a copia ou movimentação de arquivos, filtros e historico de execução.
+# BackupManager
+
+Projeto em Python para gerenciar perfis de backup de arquivos, com suporte a copia ou movimentacao de arquivos, filtros e historico de execucao.
 
 ## Recursos
 
 - Cadastro de perfis de backup.
-- Configuração de pastas de origem e destino.
-- Operções de copiar ou mover arquivos.
+- Configuracao de pastas de origem e destino.
+- Operacoes de copiar ou mover arquivos.
 - Filtros por nome, extensao, tamanho e data de modificacao.
 - Historico das execucoes.
-- Testes automatizados com `pytest`.
+- Persistencia em JSON com leitura inicial e escrita final.
+- Testes automatizados com `unittest`.
+- Interface principal com `tkinter` e `customtkinter`.
 
 ## Como Executar
 
@@ -17,16 +21,16 @@ Na pasta do projeto, execute:
 python -m backupmanager.main
 ```
 
+A interface principal usa `customtkinter`. Caso nao esteja instalado:
+
+```bash
+pip install customtkinter
+```
+
 Para abrir a interface visual de preview:
 
 ```bash
 python preview_interface.py
-```
-
-O preview usa `customtkinter`. Caso nao esteja instalado:
-
-```bash
-pip install customtkinter
 ```
 
 ## Testes
@@ -34,7 +38,13 @@ pip install customtkinter
 Para rodar os testes:
 
 ```bash
-pytest
+python -m unittest discover -s tests
+```
+
+Para verificar sintaxe dos modulos:
+
+```bash
+python -m compileall backupmanager
 ```
 
 ## Estrutura
@@ -43,9 +53,10 @@ pytest
 backupmanager/        Codigo principal do sistema
 tests/                Testes automatizados
 data/                 Arquivos locais de configuracao e historico
+docs/                 Documentacao do projeto
 preview_interface.py  Prototipo visual da interface
 ```
 
-## Observação
+## Observacao
 
-Os arquivos JSON dentro de `data/` sao dados locais de uso da aplicaçãao e nao são versionados.
+Os arquivos JSON dentro de `data/` sao dados locais de uso da aplicacao e nao sao versionados.
