@@ -1,6 +1,6 @@
 """Camada de controle entre interface e modulos internos."""
 
-from backupmanager import backup_engine, history_manager, perfil_manager, storage
+from backupmanager import backup_engine, file_utils, history_manager, perfil_manager, storage
 from backupmanager.return_codes import OK, ERRO_DADOS_INVALIDOS, ERRO_OPERACAO_INVALIDA
 
 ESTADO = {
@@ -241,6 +241,26 @@ def executar_backup_do_perfil(perfil_id):
     history_manager.registrar_backup(ESTADO["historico"], perfil_id, resultado)
     marcar_estado_alterado()
     return codigo_backup, resultado
+
+
+def obter_arquivos_do_perfil(perfil_id):
+    """Lista arquivos das origens do perfil e indica se passam nas restricoes."""
+    codigo, perfil = perfil_manager.consultar_perfil(ESTADO["perfis"], perfil_id)
+    if codigo != OK:
+        return codigo, None
+
+    caminhos = file_utils.listar_arquivos_de_origens(perfil.get("origens", []))
+    restricoes = perfil.get("restricoes", {})
+    arquivos = []
+
+    for caminho in caminhos:
+        arquivo = file_utils.obter_metadados_arquivo(caminho)
+        if arquivo is None:
+            continue
+        arquivo["incluido"] = file_utils.arquivo_atende_restricoes(arquivo, restricoes)
+        arquivos.append(arquivo)
+
+    return OK, arquivos
 
 
 def consultar_historico_do_perfil(perfil_id):

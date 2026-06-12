@@ -2,6 +2,7 @@
 
 import tkinter as tk
 from tkinter import filedialog, messagebox
+from datetime import datetime
 
 import customtkinter as ctk
 
@@ -34,6 +35,7 @@ def iniciar_interface():
     estado_interface = criar_estado_interface()
     janela = criar_janela_principal()
     estado_interface["janela"] = janela
+    trazer_janela_para_frente(janela)
 
     def ao_fechar():
         codigo_finalizar = controller.finalizar_aplicacao()
@@ -100,6 +102,15 @@ def criar_janela_principal():
     janela.minsize(980, 620)
     janela.configure(fg_color=COR_FUNDO)
     return janela
+
+
+def trazer_janela_para_frente(janela):
+    """Traz a janela principal para frente ao iniciar sem fixa-la no topo."""
+    janela.lift()
+    janela.focus_force()
+    janela.attributes("-topmost", True)
+    janela.after(700, lambda: janela.attributes("-topmost", False))
+    return OK
 
 
 def configurar_estilo_visual():
@@ -368,6 +379,9 @@ def criar_area_botoes(janela, estado_interface):
         side="left", padx=6
     )
     criar_botao(frame, "Historico", lambda: mostrar_historico_interface(estado_interface)).pack(
+        side="left", padx=(0, 6)
+    )
+    criar_botao(frame, "Visualizar arquivos", lambda: visualizar_arquivos_interface(estado_interface)).pack(
         side="left"
     )
     criar_botao(frame, "Sair", estado_interface["acao_fechar"], "#e5e7eb", "#111827").pack(side="right")
@@ -553,6 +567,128 @@ def mostrar_historico_interface(estado_interface):
     return OK
 
 
+def visualizar_arquivos_interface(estado_interface):
+    """Mostra os arquivos encontrados nas origens do perfil."""
+    perfil = obter_dados_formulario(estado_interface)
+    if perfil is None:
+        mostrar_mensagem_resultado(ERRO_DADOS_INVALIDOS)
+        return ERRO_DADOS_INVALIDOS
+
+    codigo = controller.salvar_perfil_editado(perfil)
+    if codigo != OK:
+        mostrar_mensagem_resultado(codigo)
+        return codigo
+
+    codigo, arquivos = controller.obter_arquivos_do_perfil(perfil["id"])
+    if codigo != OK:
+        mostrar_mensagem_resultado(codigo)
+        return codigo
+
+    janela = ctk.CTkToplevel(estado_interface["janela"])
+    janela.title("Arquivos encontrados")
+    janela.geometry("920x520")
+    janela.minsize(760, 420)
+    janela.configure(fg_color=COR_FUNDO)
+
+    ctk.CTkLabel(
+        janela,
+        text="Arquivos das origens",
+        text_color=COR_TEXTO,
+        font=FONTE_SECAO,
+    ).pack(anchor="w", padx=14, pady=(14, 4))
+
+    corpo = ctk.CTkFrame(janela, fg_color="transparent")
+    corpo.pack(fill="both", expand=True, padx=14, pady=(4, 14))
+    corpo.columnconfigure(0, weight=2)
+    corpo.columnconfigure(1, weight=1)
+    corpo.rowconfigure(0, weight=1)
+
+    lista = criar_listbox(corpo, 18)
+    lista.grid(row=0, column=0, sticky="nsew", padx=(0, 10))
+
+    painel = ctk.CTkFrame(
+        corpo,
+        fg_color=COR_PAINEL,
+        border_color=COR_BORDA,
+        border_width=1,
+        corner_radius=8,
+    )
+    painel.grid(row=0, column=1, sticky="nsew")
+
+    ctk.CTkLabel(
+        painel,
+        text="Detalhes",
+        text_color=COR_TEXTO,
+        font=FONTE_SECAO,
+    ).pack(anchor="w", padx=12, pady=(12, 4))
+
+    detalhes = ctk.CTkTextbox(
+        painel,
+        fg_color=COR_CAMPO,
+        border_color=COR_BORDA,
+        border_width=1,
+        text_color=COR_TEXTO,
+        font=FONTE_PADRAO,
+    )
+    detalhes.pack(fill="both", expand=True, padx=12, pady=(4, 12))
+
+    if not arquivos:
+        lista.insert(tk.END, "Nenhum arquivo encontrado")
+        detalhes.insert("end", "Nenhum arquivo encontrado nas origens do perfil.")
+    else:
+        for arquivo in arquivos:
+            extensao = arquivo.get("extensao") or "(sem extensao)"
+            lista.insert(tk.END, arquivo.get("nome", "") + "    " + extensao)
+
+    def atualizar_detalhes(indice):
+        if not arquivos or indice < 0 or indice >= len(arquivos):
+            return
+
+        arquivo = arquivos[indice]
+        status = "INCLUIDO" if arquivo.get("incluido") else "IGNORADO"
+        conteudo = (
+            "Nome: "
+            + arquivo.get("nome", "")
+            + "\nExtensao: "
+            + (arquivo.get("extensao") or "(sem extensao)")
+            + "\nStatus: "
+            + status
+            + "\nTamanho: "
+            + str(arquivo.get("tamanho", 0))
+            + " bytes\nData de modificacao: "
+            + formatar_data_modificacao(arquivo.get("data_modificacao"))
+            + "\n\nCaminho:\n"
+            + arquivo.get("caminho", "")
+        )
+
+        detalhes.configure(state="normal")
+        detalhes.delete("1.0", tk.END)
+        detalhes.insert("end", conteudo)
+        detalhes.configure(state="disabled")
+
+    def ao_selecionar(evento):
+        del evento
+        selecao = lista.curselection()
+        if selecao:
+            atualizar_detalhes(selecao[0])
+
+    def ao_mover_mouse(evento):
+        indice = lista.nearest(evento.y)
+        if arquivos and 0 <= indice < len(arquivos):
+            lista.selection_clear(0, tk.END)
+            lista.selection_set(indice)
+            atualizar_detalhes(indice)
+
+    lista.bind("<<ListboxSelect>>", ao_selecionar)
+    lista.bind("<Motion>", ao_mover_mouse)
+
+    if arquivos:
+        lista.selection_set(0)
+        atualizar_detalhes(0)
+    detalhes.configure(state="disabled")
+    return OK
+
+
 def obter_dados_formulario(estado_interface):
     """Coleta dados do formulario para um dicionario de perfil."""
     perfil_id = estado_interface.get("perfil_selecionado_id")
@@ -679,6 +815,13 @@ def converter_inteiro_opcional(texto, padrao):
     if valor < 0:
         return "invalido"
     return valor
+
+
+def formatar_data_modificacao(valor):
+    """Formata timestamp de modificacao para exibicao."""
+    if not isinstance(valor, (int, float)):
+        return ""
+    return datetime.fromtimestamp(valor).strftime("%Y-%m-%d %H:%M:%S")
 
 
 def mostrar_mensagem_resultado(codigo):

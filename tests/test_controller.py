@@ -1,4 +1,6 @@
 import unittest
+import tempfile
+from pathlib import Path
 from unittest.mock import patch
 
 from backupmanager import controller
@@ -7,6 +9,7 @@ from backupmanager.return_codes import (
     ERRO_BACKUP_SEM_ARQUIVOS,
     ERRO_DADOS_INVALIDOS,
     ERRO_OPERACAO_INVALIDA,
+    ERRO_ORIGEM_INVALIDA,
 )
 
 
@@ -93,7 +96,7 @@ class TestControllerPersistenciaMemoria(unittest.TestCase):
         with patch("backupmanager.controller.storage.salvar_historico") as mock_salvar:
             codigo_backup, resultado = controller.executar_backup_do_perfil(perfil["id"])
 
-        self.assertEqual(codigo_backup, ERRO_BACKUP_SEM_ARQUIVOS)
+        self.assertEqual(codigo_backup, ERRO_ORIGEM_INVALIDA)
         self.assertEqual(resultado["perfil_id"], perfil["id"])
         self.assertEqual(len(controller.ESTADO["historico"]), 1)
         self.assertTrue(controller.ESTADO["alterado"])
@@ -184,6 +187,43 @@ class TestControllerPersistenciaMemoria(unittest.TestCase):
         self.assertEqual(codigo, OK)
         self.assertTrue(perfil["ativo"])
         self.assertTrue(controller.ESTADO["alterado"])
+
+    def test_obter_arquivos_do_perfil_lista_arquivos_com_status_incluido(self):
+        with tempfile.TemporaryDirectory() as pasta:
+            arquivo_py = Path(pasta) / "main.py"
+            arquivo_txt = Path(pasta) / "nota.txt"
+            arquivo_py.write_text("print('ok')", encoding="utf-8")
+            arquivo_txt.write_text("texto", encoding="utf-8")
+
+            codigo, perfil = controller.criar_novo_perfil("Backup Teste")
+            self.assertEqual(codigo, OK)
+            codigo = controller.salvar_perfil_editado({
+                "id": perfil["id"],
+                "nome": perfil["nome"],
+                "origens": [pasta],
+                "restricoes": {
+                    "extensoes_permitidas": [".py"],
+                    "nome_contem": "",
+                    "tamanho_min": 0,
+                    "tamanho_max": None,
+                    "data_modificacao_min": None,
+                    "data_modificacao_max": None,
+                },
+            })
+            self.assertEqual(codigo, OK)
+
+            codigo, arquivos = controller.obter_arquivos_do_perfil(perfil["id"])
+
+            self.assertEqual(codigo, OK)
+            arquivos_por_nome = {arquivo["nome"]: arquivo for arquivo in arquivos}
+            self.assertTrue(arquivos_por_nome["main.py"]["incluido"])
+            self.assertFalse(arquivos_por_nome["nota.txt"]["incluido"])
+
+    def test_obter_arquivos_do_perfil_inexistente(self):
+        codigo, arquivos = controller.obter_arquivos_do_perfil("perfil_inexistente")
+
+        self.assertNotEqual(codigo, OK)
+        self.assertIsNone(arquivos)
 
 
 if __name__ == "__main__":
