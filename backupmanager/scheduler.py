@@ -1,5 +1,8 @@
 """Controle simples de execucao automatica."""
 
+import time
+import threading
+from backupmanager import file_utils
 from backupmanager.return_codes import OK
 
 MONITORAMENTO_ATIVO = False
@@ -22,15 +25,32 @@ def deve_executar_por_intervalo(perfil):
 
 
 def deve_executar_por_alteracao(perfil):
-    """Base para verificacao por alteracao."""
-    del perfil
-    return False
+    """Verifica se houve mudanca nos arquivos monitorados."""
+    if not perfil.get("ativo", True):
+        return False
+        
+    estado_antigo = perfil.get("estado_arquivos", {})
+    estado_novo = obter_estado_atual_arquivos(perfil)
+    
+    return comparar_estado_arquivos(estado_antigo, estado_novo)
 
 
 def obter_estado_atual_arquivos(perfil):
-    """Retorna estado atual de arquivos monitorados."""
-    del perfil
-    return {}
+    """Retorna estado atual de arquivos monitorados gerando assinaturas unicas."""
+    estado = {}
+    origens = perfil.get("origens", [])
+    
+    arquivos = file_utils.listar_arquivos_de_origens(origens)
+    
+    for caminho in arquivos:
+        try:
+            metadados = file_utils.obter_metadados_arquivo(caminho)
+            assinatura = f"{metadados.get('tamanho')}_{metadados.get('data_modificacao')}"
+            estado[caminho] = assinatura
+        except OSError:
+            pass
+            
+    return estado
 
 
 def comparar_estado_arquivos(estado_antigo, estado_novo):
@@ -45,11 +65,26 @@ def atualizar_estado_arquivos(perfil):
 
 
 def iniciar_monitoramento(perfis, callback_backup):
-    """Inicia monitoramento simples. Implementacao completa vira em etapa futura."""
+    """Inicia monitoramento em background sem travar a interface."""
     global MONITORAMENTO_ATIVO
-    del perfis
-    del callback_backup
+    
+    if MONITORAMENTO_ATIVO:
+        return OK
+
     MONITORAMENTO_ATIVO = True
+
+    def loop_monitoramento():
+        """Função que rodará em paralelo na thread."""
+        while MONITORAMENTO_ATIVO:
+            for perfil in perfis:
+                if deve_executar(perfil):
+                    callback_backup(perfil.get("id"))
+            
+            time.sleep(5)
+
+    thread = threading.Thread(target=loop_monitoramento, daemon=True)
+    thread.start()
+
     return OK
 
 
@@ -58,4 +93,3 @@ def parar_monitoramento():
     global MONITORAMENTO_ATIVO
     MONITORAMENTO_ATIVO = False
     return OK
-
