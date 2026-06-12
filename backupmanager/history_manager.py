@@ -48,3 +48,23 @@ def limpar_todo_historico(historico):
     historico.clear()
     return OK
 
+
+def preparar_historico_para_tabela(registros):
+    """Formata uma lista de registros de historico para exibicao em tabela.
+    Converte listas internas em strings e extrai apenas as colunas visuais."""
+    linhas = []
+    for reg in registros:
+        erros = reg.get("erros", [])
+        erros_str = ", ".join(erros) if erros else "Nenhum erro"
+        
+        linha = (
+            reg.get("data_hora", ""),
+            reg.get("status", "desconhecido").upper(),
+            reg.get("arquivos_processados", 0),
+            reg.get("arquivos_copiados", 0),
+            reg.get("arquivos_movidos", 0),
+            erros_str
+        )
+        linhas.append(linha)
+        
+    return OK, linhas
