@@ -1,5 +1,6 @@
 """Interface grafica do BackupManager usando tkinter e customtkinter."""
 
+import threading
 import tkinter as tk
 from tkinter import filedialog, messagebox
 from datetime import datetime
@@ -87,9 +88,13 @@ def criar_estado_interface():
         "entrada_nome_contem": None,
         "entrada_tamanho_min": None,
         "entrada_tamanho_max": None,
+        "entrada_data_min": None,
+        "entrada_data_max": None,
         "agendamento_tipo_var": None,
         "entrada_intervalo": None,
         "perfil_selecionado_id": None,
+        "botao_backup": None,
+        "backup_em_execucao": False,
     }
 
 
@@ -110,6 +115,17 @@ def trazer_janela_para_frente(janela):
     janela.focus_force()
     janela.attributes("-topmost", True)
     janela.after(700, lambda: janela.attributes("-topmost", False))
+    return OK
+
+
+def manter_janela_acima_da_principal(janela_filha, janela_principal):
+    """Mantem uma janela secundaria acima da janela principal."""
+    if janela_principal is not None:
+        janela_filha.transient(janela_principal)
+
+    janela_filha.lift(janela_principal)
+    janela_filha.focus_force()
+    janela_filha.attributes("-topmost", True)
     return OK
 
 
@@ -340,6 +356,17 @@ def criar_area_restricoes(janela, estado_interface):
     linha_tamanhos.columnconfigure(0, weight=1)
     linha_tamanhos.columnconfigure(1, weight=1)
 
+    linha_datas = ctk.CTkFrame(frame, fg_color="transparent")
+    linha_datas.pack(fill="x", padx=8, pady=4)
+    criar_label(linha_datas, "Data mod. min").grid(row=0, column=0, sticky="w")
+    criar_label(linha_datas, "Data mod. max").grid(row=0, column=1, sticky="w", padx=(8, 0))
+    estado_interface["entrada_data_min"] = criar_entry(linha_datas, 16)
+    estado_interface["entrada_data_min"].grid(row=1, column=0, sticky="ew")
+    estado_interface["entrada_data_max"] = criar_entry(linha_datas, 16)
+    estado_interface["entrada_data_max"].grid(row=1, column=1, sticky="ew", padx=(8, 0))
+    linha_datas.columnconfigure(0, weight=1)
+    linha_datas.columnconfigure(1, weight=1)
+
     estado_interface["agendamento_tipo_var"] = tk.StringVar(value="manual")
     criar_label(frame, "Agendamento").pack(anchor="w", padx=8, pady=(8, 0))
     combo = ctk.CTkComboBox(
@@ -375,9 +402,13 @@ def criar_area_botoes(janela, estado_interface):
     criar_botao(frame, "Aplicar alteracoes", lambda: aplicar_alteracoes_interface(estado_interface), COR_AZUL).pack(
         side="left"
     )
-    criar_botao(frame, "Executar backup", lambda: executar_backup_interface(estado_interface), COR_VERDE).pack(
-        side="left", padx=6
+    estado_interface["botao_backup"] = criar_botao(
+        frame,
+        "Executar backup",
+        lambda: executar_backup_interface(estado_interface),
+        COR_VERDE,
     )
+    estado_interface["botao_backup"].pack(side="left", padx=6)
     criar_botao(frame, "Historico", lambda: mostrar_historico_interface(estado_interface)).pack(
         side="left", padx=(0, 6)
     )
@@ -498,7 +529,7 @@ def aplicar_alteracoes_interface(estado_interface):
     """Aplica alteracoes do formulario ao estado em memoria."""
     perfil = obter_dados_formulario(estado_interface)
     if perfil is None:
-        mostrar_mensagem_resultado(ERRO_DADOS_INVALIDOS)
+        mostrar_erro_validacao_formulario(estado_interface)
         return ERRO_DADOS_INVALIDOS
 
     codigo = controller.salvar_perfil_editado(perfil)
@@ -516,7 +547,51 @@ def executar_backup_interface(estado_interface):
         mostrar_mensagem_resultado(ERRO_DADOS_INVALIDOS)
         return ERRO_DADOS_INVALIDOS
 
-    codigo, resultado = controller.executar_backup_do_perfil(perfil_id)
+    if estado_interface.get("backup_em_execucao"):
+        return OK
+
+    estado_interface["backup_em_execucao"] = True
+    definir_estado_botao_backup(estado_interface, False)
+
+    thread = threading.Thread(
+        target=executar_backup_em_thread,
+        args=(estado_interface, perfil_id),
+        daemon=True,
+    )
+    thread.start()
+    return OK
+
+
+def executar_backup_em_thread(estado_interface, perfil_id):
+    """Executa backup fora da thread da interface."""
+    codigo = ERRO_DADOS_INVALIDOS
+    resultado = None
+    erro = None
+
+    try:
+        codigo, resultado = controller.executar_backup_do_perfil(perfil_id)
+    except Exception as excecao:
+        erro = excecao
+
+    janela = estado_interface.get("janela")
+    if janela is None:
+        return
+
+    try:
+        janela.after(0, lambda: finalizar_backup_interface(estado_interface, codigo, resultado, erro))
+    except tk.TclError:
+        return
+
+
+def finalizar_backup_interface(estado_interface, codigo, resultado, erro):
+    """Atualiza a interface apos o termino do backup."""
+    estado_interface["backup_em_execucao"] = False
+    definir_estado_botao_backup(estado_interface, True)
+
+    if erro is not None:
+        messagebox.showerror("BackupManager", "Falha inesperada ao executar backup:\n" + str(erro))
+        return ERRO_DADOS_INVALIDOS
+
     if resultado:
         mensagem = (
             obter_mensagem(codigo)
@@ -537,6 +612,19 @@ def executar_backup_interface(estado_interface):
     return codigo
 
 
+def definir_estado_botao_backup(estado_interface, habilitado):
+    """Habilita ou desabilita o botao de backup."""
+    botao = estado_interface.get("botao_backup")
+    if botao is None:
+        return OK
+
+    if habilitado:
+        botao.configure(text="Executar backup", state="normal")
+    else:
+        botao.configure(text="Executando...", state="disabled")
+    return OK
+
+
 def mostrar_historico_interface(estado_interface):
     """Mostra o historico do perfil selecionado."""
     perfil_id = estado_interface.get("perfil_selecionado_id")
@@ -549,21 +637,109 @@ def mostrar_historico_interface(estado_interface):
         mostrar_mensagem_resultado(codigo)
         return codigo
 
-    if not historico:
-        messagebox.showinfo("BackupManager", "Nenhum historico para este perfil.")
-        return OK
+    janela = ctk.CTkToplevel(estado_interface["janela"])
+    janela.title("Historico do perfil")
+    janela.geometry("860x480")
+    janela.minsize(740, 380)
+    janela.configure(fg_color=COR_FUNDO)
+    manter_janela_acima_da_principal(janela, estado_interface["janela"])
 
-    linhas = []
-    for registro in historico:
-        linhas.append(
-            registro.get("data_hora", "")
-            + " | "
+    ctk.CTkLabel(
+        janela,
+        text="Historico do perfil",
+        text_color=COR_TEXTO,
+        font=FONTE_SECAO,
+    ).pack(anchor="w", padx=14, pady=(14, 4))
+
+    corpo = ctk.CTkFrame(janela, fg_color="transparent")
+    corpo.pack(fill="both", expand=True, padx=14, pady=(4, 10))
+    corpo.columnconfigure(0, weight=2)
+    corpo.columnconfigure(1, weight=1)
+    corpo.rowconfigure(0, weight=1)
+
+    lista = criar_listbox(corpo, 16)
+    lista.grid(row=0, column=0, sticky="nsew", padx=(0, 10))
+
+    detalhes = ctk.CTkTextbox(
+        corpo,
+        fg_color=COR_CAMPO,
+        border_color=COR_BORDA,
+        border_width=1,
+        text_color=COR_TEXTO,
+        font=FONTE_PADRAO,
+    )
+    detalhes.grid(row=0, column=1, sticky="nsew")
+
+    def preencher_historico():
+        codigo_atualizar, historico_atualizado = controller.consultar_historico_do_perfil(perfil_id)
+        if codigo_atualizar != OK:
+            mostrar_mensagem_resultado(codigo_atualizar)
+            return
+        lista.delete(0, tk.END)
+        detalhes.configure(state="normal")
+        detalhes.delete("1.0", tk.END)
+        if not historico_atualizado:
+            lista.insert(tk.END, "Nenhum historico para este perfil")
+            detalhes.insert("end", "Nenhuma execucao registrada.")
+        else:
+            for registro in historico_atualizado:
+                lista.insert(
+                    tk.END,
+                    registro.get("data_hora", "")
+                    + " | "
+                    + registro.get("status", "")
+                    + " | "
+                    + str(registro.get("arquivos_processados", 0))
+                    + " processados",
+                )
+        detalhes.configure(state="disabled")
+
+    def atualizar_detalhes(indice):
+        codigo_atualizar, historico_atualizado = controller.consultar_historico_do_perfil(perfil_id)
+        if codigo_atualizar != OK or indice < 0 or indice >= len(historico_atualizado):
+            return
+        registro = historico_atualizado[indice]
+        erros = registro.get("erros", [])
+        conteudo = (
+            "Data: "
+            + registro.get("data_hora", "")
+            + "\nStatus: "
             + registro.get("status", "")
-            + " | processados: "
+            + "\nProcessados: "
             + str(registro.get("arquivos_processados", 0))
+            + "\nCopiados: "
+            + str(registro.get("arquivos_copiados", 0))
+            + "\nMovidos: "
+            + str(registro.get("arquivos_movidos", 0))
+            + "\nErros: "
+            + str(len(erros))
         )
+        if erros:
+            conteudo += "\n\nDetalhes dos erros:\n" + "\n".join(str(erro) for erro in erros)
 
-    messagebox.showinfo("BackupManager", "\n".join(linhas))
+        detalhes.configure(state="normal")
+        detalhes.delete("1.0", tk.END)
+        detalhes.insert("end", conteudo)
+        detalhes.configure(state="disabled")
+
+    def ao_selecionar(evento):
+        del evento
+        selecao = lista.curselection()
+        if selecao:
+            atualizar_detalhes(selecao[0])
+
+    def limpar_historico():
+        codigo_limpar = controller.limpar_historico_do_perfil(perfil_id)
+        mostrar_mensagem_resultado(codigo_limpar)
+        preencher_historico()
+
+    lista.bind("<<ListboxSelect>>", ao_selecionar)
+    preencher_historico()
+
+    linha_botoes = ctk.CTkFrame(janela, fg_color="transparent")
+    linha_botoes.pack(fill="x", padx=14, pady=(0, 14))
+    criar_botao(linha_botoes, "Limpar historico do perfil", limpar_historico, COR_VERMELHO).pack(side="left")
+    criar_botao(linha_botoes, "Fechar", janela.destroy).pack(side="right")
     return OK
 
 
@@ -571,7 +747,7 @@ def visualizar_arquivos_interface(estado_interface):
     """Mostra os arquivos encontrados nas origens do perfil."""
     perfil = obter_dados_formulario(estado_interface)
     if perfil is None:
-        mostrar_mensagem_resultado(ERRO_DADOS_INVALIDOS)
+        mostrar_erro_validacao_formulario(estado_interface)
         return ERRO_DADOS_INVALIDOS
 
     codigo = controller.salvar_perfil_editado(perfil)
@@ -589,6 +765,7 @@ def visualizar_arquivos_interface(estado_interface):
     janela.geometry("920x520")
     janela.minsize(760, 420)
     janela.configure(fg_color=COR_FUNDO)
+    manter_janela_acima_da_principal(janela, estado_interface["janela"])
 
     ctk.CTkLabel(
         janela,
@@ -698,8 +875,16 @@ def obter_dados_formulario(estado_interface):
     tamanho_min = converter_inteiro_opcional(estado_interface["entrada_tamanho_min"].get(), 0)
     tamanho_max = converter_inteiro_opcional(estado_interface["entrada_tamanho_max"].get(), None)
     intervalo = converter_inteiro_opcional(estado_interface["entrada_intervalo"].get(), None)
+    data_min = converter_data_opcional(estado_interface["entrada_data_min"].get())
+    data_max = converter_data_opcional(estado_interface["entrada_data_max"].get())
 
-    if tamanho_min == "invalido" or tamanho_max == "invalido" or intervalo == "invalido":
+    if (
+        tamanho_min == "invalido"
+        or tamanho_max == "invalido"
+        or intervalo == "invalido"
+        or data_min == "invalido"
+        or data_max == "invalido"
+    ):
         return None
 
     return {
@@ -713,8 +898,8 @@ def obter_dados_formulario(estado_interface):
             "nome_contem": estado_interface["entrada_nome_contem"].get().strip(),
             "tamanho_min": tamanho_min,
             "tamanho_max": tamanho_max,
-            "data_modificacao_min": None,
-            "data_modificacao_max": None,
+            "data_modificacao_min": data_min,
+            "data_modificacao_max": data_max,
         },
         "agendamento": {
             "tipo": estado_interface["agendamento_tipo_var"].get(),
@@ -746,6 +931,8 @@ def preencher_formulario_com_perfil(estado_interface, perfil):
 
     tamanho_max = restricoes.get("tamanho_max")
     preencher_entry(estado_interface["entrada_tamanho_max"], "" if tamanho_max is None else str(tamanho_max))
+    preencher_entry(estado_interface["entrada_data_min"], restricoes.get("data_modificacao_min") or "")
+    preencher_entry(estado_interface["entrada_data_max"], restricoes.get("data_modificacao_max") or "")
 
     agendamento = perfil.get("agendamento", {})
     estado_interface["agendamento_tipo_var"].set(agendamento.get("tipo", "manual"))
@@ -765,6 +952,8 @@ def limpar_formulario(estado_interface):
     preencher_entry(estado_interface["entrada_nome_contem"], "")
     preencher_entry(estado_interface["entrada_tamanho_min"], "")
     preencher_entry(estado_interface["entrada_tamanho_max"], "")
+    preencher_entry(estado_interface["entrada_data_min"], "")
+    preencher_entry(estado_interface["entrada_data_max"], "")
     estado_interface["agendamento_tipo_var"].set("manual")
     preencher_entry(estado_interface["entrada_intervalo"], "")
     return OK
@@ -817,11 +1006,53 @@ def converter_inteiro_opcional(texto, padrao):
     return valor
 
 
+def converter_data_opcional(texto):
+    """Valida data opcional e retorna texto normalizado."""
+    texto = texto.strip()
+    if not texto:
+        return None
+    try:
+        datetime.fromisoformat(texto)
+    except ValueError:
+        return "invalido"
+    return texto
+
+
 def formatar_data_modificacao(valor):
     """Formata timestamp de modificacao para exibicao."""
     if not isinstance(valor, (int, float)):
         return ""
     return datetime.fromtimestamp(valor).strftime("%Y-%m-%d %H:%M:%S")
+
+
+def mostrar_erro_validacao_formulario(estado_interface):
+    """Mostra mensagem especifica para dados invalidos do formulario."""
+    if not estado_interface.get("perfil_selecionado_id"):
+        messagebox.showerror("BackupManager", "Selecione um perfil antes de aplicar alteracoes.")
+        return ERRO_DADOS_INVALIDOS
+
+    if not estado_interface["entrada_nome"].get().strip():
+        messagebox.showerror("BackupManager", "Informe um nome para o perfil.")
+        return ERRO_DADOS_INVALIDOS
+
+    tamanho_min = converter_inteiro_opcional(estado_interface["entrada_tamanho_min"].get(), 0)
+    tamanho_max = converter_inteiro_opcional(estado_interface["entrada_tamanho_max"].get(), None)
+    intervalo = converter_inteiro_opcional(estado_interface["entrada_intervalo"].get(), None)
+    if tamanho_min == "invalido" or tamanho_max == "invalido":
+        messagebox.showerror("BackupManager", "Informe tamanhos validos usando numeros inteiros positivos.")
+        return ERRO_DADOS_INVALIDOS
+    if intervalo == "invalido":
+        messagebox.showerror("BackupManager", "Informe um intervalo valido em minutos.")
+        return ERRO_DADOS_INVALIDOS
+
+    data_min = converter_data_opcional(estado_interface["entrada_data_min"].get())
+    data_max = converter_data_opcional(estado_interface["entrada_data_max"].get())
+    if data_min == "invalido" or data_max == "invalido":
+        messagebox.showerror("BackupManager", "Use datas no formato AAAA-MM-DD HH:MM:SS.")
+        return ERRO_DADOS_INVALIDOS
+
+    messagebox.showerror("BackupManager", "Verifique os dados do formulario.")
+    return ERRO_DADOS_INVALIDOS
 
 
 def mostrar_mensagem_resultado(codigo):

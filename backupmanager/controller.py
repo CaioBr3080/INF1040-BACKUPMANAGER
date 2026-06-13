@@ -1,7 +1,14 @@
 """Camada de controle entre interface e modulos internos."""
 
 from backupmanager import backup_engine, file_utils, history_manager, perfil_manager, storage
-from backupmanager.return_codes import OK, ERRO_DADOS_INVALIDOS, ERRO_OPERACAO_INVALIDA
+from backupmanager.return_codes import (
+    OK,
+    ERRO_DADOS_INVALIDOS,
+    ERRO_DESTINO_INVALIDO,
+    ERRO_OPERACAO_INVALIDA,
+    ERRO_ORIGEM_INVALIDA,
+    ERRO_PERFIL_INATIVO,
+)
 
 ESTADO = {
     "perfis": [],
@@ -19,6 +26,10 @@ def marcar_estado_alterado():
 
 def inicializar_aplicacao():
     """Carrega dados iniciais dos arquivos JSON para a memoria."""
+    codigo_padrao = storage.criar_arquivos_padrao()
+    if codigo_padrao != OK:
+        return codigo_padrao
+
     codigo_perfis, perfis = storage.carregar_perfis()
     codigo_historico, historico = storage.carregar_historico()
     codigo_config, config = storage.carregar_configuracoes()
@@ -185,6 +196,9 @@ def desativar_perfil_por_id(perfil_id):
 
 def adicionar_origem_ao_perfil(perfil_id, caminho):
     """Adiciona origem a um perfil."""
+    if not caminho or not file_utils.caminho_e_diretorio(caminho):
+        return ERRO_ORIGEM_INVALIDA
+
     codigo = perfil_manager.adicionar_origem(ESTADO["perfis"], perfil_id, caminho)
     if codigo == OK:
         marcar_estado_alterado()
@@ -201,6 +215,9 @@ def remover_origem_do_perfil(perfil_id, caminho):
 
 def adicionar_destino_ao_perfil(perfil_id, caminho):
     """Adiciona destino a um perfil."""
+    if not caminho or not file_utils.caminho_e_diretorio(caminho):
+        return ERRO_DESTINO_INVALIDO
+
     codigo = perfil_manager.adicionar_destino(ESTADO["perfis"], perfil_id, caminho)
     if codigo == OK:
         marcar_estado_alterado()
@@ -237,6 +254,9 @@ def executar_backup_do_perfil(perfil_id):
     if codigo != OK:
         return codigo, None
 
+    if not perfil.get("ativo", True):
+        return ERRO_PERFIL_INATIVO, None
+
     codigo_backup, resultado = backup_engine.executar_backup(perfil)
     history_manager.registrar_backup(ESTADO["historico"], perfil_id, resultado)
     marcar_estado_alterado()
@@ -266,3 +286,34 @@ def obter_arquivos_do_perfil(perfil_id):
 def consultar_historico_do_perfil(perfil_id):
     """Consulta historico de um perfil."""
     return history_manager.consultar_historico_por_perfil(ESTADO["historico"], perfil_id)
+
+
+def limpar_historico_do_perfil(perfil_id):
+    """Limpa historico de um perfil em memoria."""
+    codigo = history_manager.limpar_historico_perfil(ESTADO["historico"], perfil_id)
+    if codigo == OK:
+        marcar_estado_alterado()
+    return codigo
+
+
+def limpar_todo_historico():
+    """Limpa todo o historico em memoria."""
+    codigo = history_manager.limpar_todo_historico(ESTADO["historico"])
+    if codigo == OK:
+        marcar_estado_alterado()
+    return codigo
+
+
+def obter_configuracoes():
+    """Retorna configuracoes gerais em memoria."""
+    return OK, ESTADO["config"]
+
+
+def salvar_configuracoes(config):
+    """Substitui configuracoes gerais em memoria."""
+    if not isinstance(config, dict):
+        return ERRO_DADOS_INVALIDOS
+
+    ESTADO["config"] = config
+    marcar_estado_alterado()
+    return OK

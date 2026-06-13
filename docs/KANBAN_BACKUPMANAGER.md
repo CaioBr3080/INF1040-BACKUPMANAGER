@@ -352,6 +352,8 @@ Resultado:
 
 ## BM-09 - Criar pasta de destino quando necessario
 
+Status: Concluido
+
 Prioridade: Alta
 
 Modulo principal: `backupmanager/backup_engine.py`
@@ -373,7 +375,16 @@ Criterios de aceite:
 - Retorna codigo padronizado.
 - Possui teste com `tempfile`.
 
+Resultado:
+
+- `criar_pasta_destino_se_necessario` cria diretorios pais do caminho de destino.
+- Diretorio existente retorna `OK`.
+- Caminho vazio ou invalido retorna `ERRO_DESTINO_INVALIDO`.
+- Testado em `tests/test_backup_engine.py`.
+
 ## BM-10 - Implementar copia de arquivo
+
+Status: Concluido
 
 Prioridade: Alta
 
@@ -397,7 +408,17 @@ Criterios de aceite:
 - Falha retorna codigo de erro, nao quebra a aplicacao.
 - Possui teste com `tempfile`.
 
+Resultado:
+
+- `copiar_arquivo` copia arquivos usando `shutil.copy2`.
+- Cria a pasta de destino antes da copia.
+- Mantem o arquivo original na origem.
+- Retorna codigo de erro sem levantar excecao para dados invalidos ou origem inexistente.
+- Testado em `tests/test_backup_engine.py`.
+
 ## BM-11 - Implementar movimentacao de arquivo
+
+Status: Concluido
 
 Prioridade: Alta
 
@@ -420,7 +441,17 @@ Criterios de aceite:
 - Falha retorna codigo de erro.
 - Possui teste com `tempfile`.
 
+Resultado:
+
+- `mover_arquivo` move arquivos usando `shutil.move`.
+- Cria a pasta de destino antes da movimentacao.
+- Remove o arquivo da origem quando a movimentacao tem sucesso.
+- Retorna codigo de erro sem levantar excecao para dados invalidos ou origem inexistente.
+- Testado em `tests/test_backup_engine.py`.
+
 ## BM-12 - Executar backup para multiplos destinos
+
+Status: Concluido
 
 Prioridade: Alta
 
@@ -447,11 +478,21 @@ Criterios de aceite:
 - Retorna erro especifico se nenhum arquivo passar nos filtros.
 - Possui testes de copia, mover e multiplos destinos.
 
+Resultado:
+
+- `executar_backup` lista arquivos, aplica restricoes e processa arquivos validos.
+- `executar_backup_multiplos_destinos` atualiza contadores e status.
+- `processar_arquivo_para_destinos` registra erros por arquivo sem cancelar tudo.
+- Modo `mover` copia para todos os destinos antes de remover o original.
+- Testado em `tests/test_backup_engine.py`.
+
 ---
 
 # Backlog - Controller
 
 ## BM-13 - Bloquear backup de perfil inativo
+
+Status: Concluido
 
 Prioridade: Media
 
@@ -469,7 +510,15 @@ Criterios de aceite:
 - Nenhum historico de backup bem-sucedido deve ser registrado nesse caso.
 - Possui teste em `tests/test_controller.py`.
 
+Resultado:
+
+- `controller.executar_backup_do_perfil` bloqueia perfil inativo.
+- Perfil inativo nao registra historico nem marca estado alterado.
+- Testado em `tests/test_controller.py`.
+
 ## BM-14 - Validar origem e destino no controller
+
+Status: Concluido
 
 Prioridade: Media
 
@@ -489,7 +538,16 @@ Criterios de aceite:
 - Nao salva JSON imediatamente.
 - Possui testes.
 
+Resultado:
+
+- `adicionar_origem_ao_perfil` valida diretorio existente.
+- `adicionar_destino_ao_perfil` valida diretorio existente.
+- Caminhos vazios retornam erro padronizado.
+- Testado em `tests/test_controller.py`.
+
 ## BM-15 - Adicionar funcoes de limpeza de historico
+
+Status: Concluido
 
 Prioridade: Baixa
 
@@ -512,7 +570,15 @@ Criterios de aceite:
 - Marca `ESTADO["alterado"] = True`.
 - Possui testes.
 
+Resultado:
+
+- Criadas funcoes `limpar_historico_do_perfil` e `limpar_todo_historico`.
+- Ambas alteram apenas memoria e marcam estado alterado.
+- Testado em `tests/test_controller.py`.
+
 ## BM-16 - Adicionar configuracoes gerais
+
+Status: Concluido
 
 Prioridade: Baixa
 
@@ -536,11 +602,19 @@ Criterios de aceite:
 - Nao salva JSON imediatamente.
 - Possui testes.
 
+Resultado:
+
+- Criadas funcoes `obter_configuracoes` e `salvar_configuracoes`.
+- Configuracoes sao mantidas em memoria ate `finalizar_aplicacao`.
+- Testado em `tests/test_controller.py`.
+
 ---
 
 # Backlog - Historico
 
 ## BM-17 - Padronizar status do historico
+
+Status: Concluido
 
 Prioridade: Media
 
@@ -565,7 +639,15 @@ Criterios de aceite:
 - Erros sempre sao lista.
 - Possui testes.
 
+Resultado:
+
+- Status ficam padronizados em `sucesso`, `parcial`, `erro` e `sem_arquivos`.
+- Erros sao normalizados para lista.
+- Testado em `tests/test_history_manager.py`.
+
 ## BM-18 - Testar limpeza de historico
+
+Status: Concluido
 
 Prioridade: Baixa
 
@@ -584,7 +666,14 @@ Criterios de aceite:
 
 - Testes confirmam que apenas registros esperados sao removidos.
 
+Resultado:
+
+- Adicionados testes para limpeza por perfil e limpeza total.
+- Testado em `tests/test_history_manager.py`.
+
 ## BM-19 - Criar resumo de historico por perfil
+
+Status: Concluido
 
 Prioridade: Baixa
 
@@ -607,11 +696,19 @@ Criterios de aceite:
 - Retorna quantidade de erros.
 - Possui testes.
 
+Resultado:
+
+- Criada funcao `gerar_resumo_historico_perfil`.
+- Resumo retorna execucoes, arquivos processados e erros.
+- Testado em `tests/test_history_manager.py`.
+
 ---
 
 # Backlog - Scheduler
 
 ## BM-20 - Implementar execucao por intervalo
+
+Status: Concluido
 
 Prioridade: Media
 
@@ -630,7 +727,15 @@ Criterios de aceite:
 - Perfil inativo nao executa.
 - Possui testes.
 
+Resultado:
+
+- `deve_executar_por_intervalo` respeita intervalo e ultima execucao.
+- Perfil inativo nao executa.
+- Testado em `tests/test_scheduler.py`.
+
 ## BM-21 - Obter estado atual dos arquivos
+
+Status: Concluido
 
 Prioridade: Media
 
@@ -652,7 +757,15 @@ Criterios de aceite:
 - Ignora origens invalidas sem quebrar.
 - Possui testes.
 
+Resultado:
+
+- `obter_estado_atual_arquivos` retorna tamanho e data de modificacao por caminho.
+- Origens invalidas sao ignoradas.
+- Testado em `tests/test_scheduler.py`.
+
 ## BM-22 - Detectar alteracao de arquivos
+
+Status: Concluido
 
 Prioridade: Media
 
@@ -676,7 +789,15 @@ Criterios de aceite:
 - Detecta arquivo modificado.
 - Possui testes.
 
+Resultado:
+
+- `comparar_estado_arquivos` compara estados antigos e novos.
+- `deve_executar_por_alteracao` detecta mudancas respeitando perfil ativo.
+- Testado em `tests/test_scheduler.py`.
+
 ## BM-23 - Atualizar estado de arquivos em memoria
+
+Status: Concluido
 
 Prioridade: Media
 
@@ -695,7 +816,15 @@ Criterios de aceite:
 - Retorna `OK`.
 - Possui testes.
 
+Resultado:
+
+- `atualizar_estado_arquivos` atualiza `perfil["estado_arquivos"]` em memoria.
+- Nao usa persistencia.
+- Testado em `tests/test_scheduler.py`.
+
 ## BM-24 - Implementar monitoramento simples
+
+Status: Concluido
 
 Prioridade: Baixa
 
@@ -715,11 +844,20 @@ Criterios de aceite:
 - Nao salva JSON diretamente.
 - Possui teste simples sem loop infinito.
 
+Resultado:
+
+- `iniciar_monitoramento` inicia thread daemon de monitoramento.
+- `parar_monitoramento` encerra o loop.
+- Callback de backup e atualizado quando um perfil deve executar.
+- Testado em `tests/test_scheduler.py`.
+
 ---
 
 # Backlog - Interface
 
 ## BM-25 - Criar janela de historico
+
+Status: Concluido
 
 Prioridade: Media
 
@@ -737,7 +875,15 @@ Criterios de aceite:
 - Nao acessa historico diretamente; usa controller.
 - Funciona sem historico.
 
+Resultado:
+
+- Historico abre em janela propria com lista e detalhes.
+- Mostra data, status, processados, copiados, movidos e erros.
+- Funciona quando nao ha registros.
+
 ## BM-26 - Adicionar campos de data de modificacao
+
+Status: Concluido
 
 Prioridade: Media
 
@@ -756,7 +902,15 @@ Criterios de aceite:
 - Valores vazios viram `None`.
 - Mensagem de erro para formato invalido.
 
+Resultado:
+
+- Interface possui campos de data minima e maxima.
+- Valores sao enviados em `restricoes`.
+- Datas vazias viram `None`; formato invalido mostra mensagem.
+
 ## BM-27 - Melhorar validacao visual do formulario
+
+Status: Concluido
 
 Prioridade: Baixa
 
@@ -774,7 +928,13 @@ Criterios de aceite:
 - Tamanho invalido mostra mensagem especifica.
 - Sem perfil selecionado mostra mensagem especifica.
 
+Resultado:
+
+- Formulario mostra mensagens especificas para perfil ausente, nome vazio, tamanho invalido, intervalo invalido e data invalida.
+
 ## BM-28 - Atualizar interface apos backup
+
+Status: Concluido
 
 Prioridade: Baixa
 
@@ -791,7 +951,14 @@ Criterios de aceite:
 - Mostra resumo do resultado.
 - Historico atualizado aparece ao abrir a janela.
 
+Resultado:
+
+- Execucao de backup mostra resumo de processados, copiados e movidos.
+- Historico atualizado aparece na janela de historico.
+
 ## BM-29 - Revisar layout final
+
+Status: Concluido
 
 Prioridade: Baixa
 
@@ -809,11 +976,18 @@ Criterios de aceite:
 - Textos cabem nos botoes.
 - Interface continua sem classes.
 
+Resultado:
+
+- Layout recebeu campos de data, janela de historico e botoes mantendo funcoes em dicionarios.
+- Interface continua sem classes.
+
 ---
 
 # Backlog - Storage e Documentacao
 
 ## BM-30 - Reforcar tratamento de erro no storage
+
+Status: Concluido
 
 Prioridade: Baixa
 
@@ -831,7 +1005,15 @@ Criterios de aceite:
 - `carregar_json` continua tratando JSON corrompido.
 - Possui testes.
 
+Resultado:
+
+- `salvar_json` trata dados invalidos e falhas de escrita.
+- `carregar_json` trata JSON corrompido e falhas de leitura.
+- Testado em `tests/test_storage.py`.
+
 ## BM-31 - Criar arquivos JSON padrao quando necessario
+
+Status: Concluido
 
 Prioridade: Baixa
 
@@ -848,7 +1030,15 @@ Criterios de aceite:
 - Pasta `data` e arquivos padrao podem ser criados.
 - Nao quebra testes existentes.
 
+Resultado:
+
+- Criada funcao `criar_arquivos_padrao`.
+- Inicializacao do controller prepara arquivos padrao antes de carregar dados.
+- Testado em `tests/test_storage.py` e `tests/test_controller.py`.
+
 ## BM-32 - Atualizar documentacao final
+
+Status: Concluido
 
 Prioridade: Baixa
 
@@ -866,6 +1056,10 @@ Criterios de aceite:
 - README explica como testar.
 - Documentacao reflete persistencia em memoria.
 - Documentacao cita `customtkinter` como biblioteca visual permitida.
+
+Resultado:
+
+- README e documentos de apoio atualizados para o comportamento final do sistema.
 
 ---
 
