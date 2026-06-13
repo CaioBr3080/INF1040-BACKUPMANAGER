@@ -1,5 +1,6 @@
 """Interface grafica do BackupManager usando tkinter e customtkinter."""
 
+import os
 import threading
 import tkinter as tk
 from tkinter import filedialog, messagebox
@@ -176,7 +177,7 @@ def criar_entry(container, largura=None):
     )
 
 
-def criar_botao(container, texto, comando, cor=COR_PAINEL_2, texto_cor=COR_TEXTO):
+def criar_botao(container, texto, comando, cor=COR_PAINEL_2, texto_cor=COR_TEXTO, largura=None):
     """Cria um botao padronizado."""
     hover = COR_AZUL if cor != COR_AZUL else "#1d4ed8"
     if cor == COR_VERDE:
@@ -193,10 +194,51 @@ def criar_botao(container, texto, comando, cor=COR_PAINEL_2, texto_cor=COR_TEXTO
         fg_color=cor,
         hover_color=hover,
         text_color=texto_cor,
+        width=largura or 140,
         height=34,
         corner_radius=6,
         font=FONTE_PADRAO,
     )
+
+
+def adicionar_tooltip(widget, texto):
+    """Adiciona tooltip simples a um widget."""
+    tooltip = {"janela": None}
+
+    def mostrar(evento):
+        del evento
+        if tooltip["janela"] is not None:
+            return
+
+        janela = tk.Toplevel(widget)
+        janela.wm_overrideredirect(True)
+        janela.configure(bg=COR_BORDA)
+        x = widget.winfo_rootx()
+        y = widget.winfo_rooty() + widget.winfo_height() + 6
+        janela.wm_geometry("+" + str(x) + "+" + str(y))
+        tk.Label(
+            janela,
+            text=texto,
+            bg=COR_PAINEL,
+            fg=COR_TEXTO,
+            relief="solid",
+            bd=1,
+            padx=8,
+            pady=4,
+            font=FONTE_PADRAO,
+        ).pack()
+        tooltip["janela"] = janela
+
+    def ocultar(evento):
+        del evento
+        if tooltip["janela"] is not None:
+            tooltip["janela"].destroy()
+            tooltip["janela"] = None
+
+    widget.bind("<Enter>", mostrar)
+    widget.bind("<Leave>", ocultar)
+    widget.bind("<ButtonPress>", ocultar)
+    return widget
 
 
 def criar_listbox(container, altura):
@@ -284,6 +326,14 @@ def criar_area_origens_destinos(janela, estado_interface):
     criar_botao(linha_origens, "Remover origem", lambda: remover_item_lista(estado_interface["lista_origens"])).pack(
         side="left", padx=6
     )
+    botao_abrir_origem = criar_botao(
+        linha_origens,
+        "📁",
+        lambda: abrir_pasta_selecionada(estado_interface["lista_origens"], "origem"),
+        largura=42,
+    )
+    botao_abrir_origem.pack(side="left")
+    adicionar_tooltip(botao_abrir_origem, "Abrir pasta de origem")
 
     criar_label(frame, "Destinos").pack(anchor="w", padx=8)
     estado_interface["lista_destinos"] = criar_listbox(frame, 7)
@@ -299,6 +349,14 @@ def criar_area_origens_destinos(janela, estado_interface):
         "Remover destino",
         lambda: remover_item_lista(estado_interface["lista_destinos"]),
     ).pack(side="left", padx=6)
+    botao_abrir_destino = criar_botao(
+        linha_destinos,
+        "📁",
+        lambda: abrir_pasta_selecionada(estado_interface["lista_destinos"], "destino"),
+        largura=42,
+    )
+    botao_abrir_destino.pack(side="left")
+    adicionar_tooltip(botao_abrir_destino, "Abrir pasta de destino")
 
     estado_interface["operacao_var"] = tk.StringVar(value="copiar")
     linha_operacao = ctk.CTkFrame(frame, fg_color="transparent")
@@ -522,6 +580,27 @@ def remover_item_lista(lista):
     selecao = lista.curselection()
     if selecao:
         lista.delete(selecao[0])
+    return OK
+
+
+def abrir_pasta_selecionada(lista, tipo):
+    """Abre a pasta selecionada em uma listbox."""
+    selecao = lista.curselection()
+    if not selecao:
+        messagebox.showwarning("BackupManager", "Selecione uma pasta de " + tipo + ".")
+        return ERRO_DADOS_INVALIDOS
+
+    caminho = lista.get(selecao[0])
+    if not os.path.isdir(caminho):
+        messagebox.showerror("BackupManager", "Pasta de " + tipo + " nao encontrada.")
+        return ERRO_DADOS_INVALIDOS
+
+    try:
+        os.startfile(caminho)
+    except OSError:
+        messagebox.showerror("BackupManager", "Nao foi possivel abrir a pasta de " + tipo + ".")
+        return ERRO_DADOS_INVALIDOS
+
     return OK
 
 
