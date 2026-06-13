@@ -322,6 +322,34 @@ class TestControllerPersistenciaMemoria(unittest.TestCase):
         self.assertEqual(codigo, ERRO_DADOS_INVALIDOS)
         self.assertFalse(controller.ESTADO["alterado"])
 
+    def test_obter_extensoes_disponiveis_une_padrao_e_config(self):
+        controller.ESTADO["config"] = {"extensoes_disponiveis": ["log", ".TXT"]}
+
+        codigo, extensoes = controller.obter_extensoes_disponiveis()
+
+        self.assertEqual(codigo, OK)
+        self.assertIn(".txt", extensoes)
+        self.assertIn(".log", extensoes)
+        self.assertEqual(extensoes.count(".txt"), 1)
+
+    def test_adicionar_extensao_disponivel_normaliza_e_altera_memoria(self):
+        controller.ESTADO["config"] = {}
+        controller.ESTADO["alterado"] = False
+
+        codigo = controller.adicionar_extensao_disponivel("LOG")
+
+        self.assertEqual(codigo, OK)
+        self.assertEqual(controller.ESTADO["config"]["extensoes_disponiveis"], [".log"])
+        self.assertTrue(controller.ESTADO["alterado"])
+
+    def test_adicionar_extensao_disponivel_rejeita_invalida(self):
+        controller.ESTADO["alterado"] = False
+
+        codigo = controller.adicionar_extensao_disponivel("")
+
+        self.assertEqual(codigo, ERRO_DADOS_INVALIDOS)
+        self.assertFalse(controller.ESTADO["alterado"])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -17,6 +17,33 @@ ESTADO = {
     "alterado": False,
 }
 
+EXTENSOES_PADRAO = [
+    ".7z",
+    ".bak",
+    ".csv",
+    ".db",
+    ".doc",
+    ".docx",
+    ".gif",
+    ".jpeg",
+    ".jpg",
+    ".json",
+    ".md",
+    ".mp3",
+    ".mp4",
+    ".pdf",
+    ".png",
+    ".ppt",
+    ".pptx",
+    ".py",
+    ".rar",
+    ".sql",
+    ".txt",
+    ".xlsx",
+    ".xml",
+    ".zip",
+]
+
 
 def marcar_estado_alterado():
     """Marca que o estado em memoria possui alteracoes nao persistidas."""
@@ -315,5 +342,51 @@ def salvar_configuracoes(config):
         return ERRO_DADOS_INVALIDOS
 
     ESTADO["config"] = config
+    marcar_estado_alterado()
+    return OK
+
+
+def normalizar_extensao(extensao):
+    """Normaliza extensao para o formato .ext."""
+    if not isinstance(extensao, str):
+        return None
+
+    extensao = extensao.strip().lower()
+    if not extensao:
+        return None
+    if not extensao.startswith("."):
+        extensao = "." + extensao
+    if extensao == ".":
+        return None
+    return extensao
+
+
+def obter_extensoes_disponiveis():
+    """Retorna extensoes padrao e customizadas."""
+    customizadas = ESTADO["config"].get("extensoes_disponiveis", [])
+    extensoes = []
+
+    for extensao in EXTENSOES_PADRAO + customizadas:
+        extensao_normalizada = normalizar_extensao(extensao)
+        if extensao_normalizada and extensao_normalizada not in extensoes:
+            extensoes.append(extensao_normalizada)
+
+    return OK, sorted(extensoes)
+
+
+def adicionar_extensao_disponivel(extensao):
+    """Adiciona extensao customizada a configuracao em memoria."""
+    extensao_normalizada = normalizar_extensao(extensao)
+    if extensao_normalizada is None:
+        return ERRO_DADOS_INVALIDOS
+
+    codigo, extensoes = obter_extensoes_disponiveis()
+    if codigo != OK:
+        return codigo
+    if extensao_normalizada in extensoes:
+        return OK
+
+    customizadas = ESTADO["config"].setdefault("extensoes_disponiveis", [])
+    customizadas.append(extensao_normalizada)
     marcar_estado_alterado()
     return OK

@@ -56,6 +56,10 @@ Clique em um perfil na lista. Os dados aparecem no formulario.
 
 Altere nome, estado ativo/inativo, origens, destinos, operacao, restricoes ou agendamento e clique em `Aplicar alteracoes`.
 
+As extensoes permitidas sao escolhidas em uma lista de checkboxes. Para usar uma extensao que nao aparece na lista, digite a extensao no campo lateral e clique em `Adicionar`.
+
+Extensoes adicionadas ficam em memoria durante a execucao e sao salvas em `config.json` ao encerrar a aplicacao.
+
 ### Adicionar Origem ou Destino
 
 Use `Adicionar origem` ou `Adicionar destino`, escolha uma pasta e depois clique em `Aplicar alteracoes`.

@@ -53,6 +53,8 @@ Quando houver alteracao em perfis, historico ou configuracao:
 ESTADO["alterado"] = True
 ```
 
+`ESTADO["config"]` tambem guarda extensoes customizadas em `extensoes_disponiveis`. A interface mostra extensoes padrao e customizadas em checkboxes; o perfil salva somente as extensoes marcadas em `restricoes["extensoes_permitidas"]`.
+
 Os JSONs sao reescritos somente em:
 
 ```python
@@ -97,7 +99,7 @@ Deve chamar o `controller.py` e nao executar regras complexas de backup diretame
 
 Camada central da aplicacao.
 
-Responsavel por carregar dados, manter `ESTADO`, coordenar modulos internos, validar perfil inativo, validar caminhos de origem/destino e salvar JSON apenas no encerramento.
+Responsavel por carregar dados, manter `ESTADO`, coordenar modulos internos, validar perfil inativo, validar caminhos de origem/destino, manter a lista de extensoes disponiveis e salvar JSON apenas no encerramento.
 
 ### `perfil_manager.py`
 

@@ -51,13 +51,19 @@ def iniciar_interface():
 
     cabecalho = ctk.CTkFrame(janela, fg_color="transparent")
     cabecalho.pack(fill="x", padx=18, pady=(16, 0))
-    ctk.CTkLabel(cabecalho, text="BackupManager", text_color=COR_TEXTO, font=FONTE_TITULO).pack(anchor="w")
+    cabecalho.columnconfigure(0, weight=1)
+    cabecalho.columnconfigure(1, weight=0)
+
+    bloco_titulo = ctk.CTkFrame(cabecalho, fg_color="transparent")
+    bloco_titulo.grid(row=0, column=0, sticky="w")
+    ctk.CTkLabel(bloco_titulo, text="BackupManager", text_color=COR_TEXTO, font=FONTE_TITULO).pack(anchor="w")
     ctk.CTkLabel(
-        cabecalho,
+        bloco_titulo,
         text="Perfis, rotinas locais e persistencia em memoria",
         text_color=COR_TEXTO_FRACO,
         font=ctk.CTkFont(family=FONTE_FAMILIA, size=12),
     ).pack(anchor="w", pady=(2, 0))
+    criar_area_botoes(cabecalho, estado_interface)
 
     criar_area_perfis(janela, estado_interface)
 
@@ -67,7 +73,6 @@ def iniciar_interface():
 
     criar_area_origens_destinos(frame_central, estado_interface)
     criar_area_restricoes(frame_central, estado_interface)
-    criar_area_botoes(janela, estado_interface)
     atualizar_lista_perfis(estado_interface)
 
     janela.mainloop()
@@ -85,7 +90,9 @@ def criar_estado_interface():
         "lista_destinos": None,
         "operacao_var": None,
         "ativo_var": None,
-        "entrada_extensoes": None,
+        "frame_extensoes": None,
+        "extensoes_vars": {},
+        "entrada_nova_extensao": None,
         "entrada_nome_contem": None,
         "entrada_tamanho_min": None,
         "entrada_tamanho_max": None,
@@ -328,7 +335,7 @@ def criar_area_origens_destinos(janela, estado_interface):
     )
     botao_abrir_origem = criar_botao(
         linha_origens,
-        "📁",
+        "\U0001F4C1",
         lambda: abrir_pasta_selecionada(estado_interface["lista_origens"], "origem"),
         largura=42,
     )
@@ -351,7 +358,7 @@ def criar_area_origens_destinos(janela, estado_interface):
     ).pack(side="left", padx=6)
     botao_abrir_destino = criar_botao(
         linha_destinos,
-        "📁",
+        "\U0001F4C1",
         lambda: abrir_pasta_selecionada(estado_interface["lista_destinos"], "destino"),
         largura=42,
     )
@@ -390,14 +397,82 @@ def criar_area_origens_destinos(janela, estado_interface):
     return frame
 
 
+def criar_area_extensoes(container, estado_interface):
+    """Cria area de selecao de extensoes por checkbox."""
+    criar_label(container, "Extensoes permitidas").pack(anchor="w", padx=8, pady=(8, 0))
+
+    linha_adicionar = ctk.CTkFrame(container, fg_color="transparent")
+    linha_adicionar.pack(fill="x", padx=8, pady=(4, 4))
+    estado_interface["entrada_nova_extensao"] = criar_entry(linha_adicionar)
+    estado_interface["entrada_nova_extensao"].pack(side="left", fill="x", expand=True)
+    criar_botao(
+        linha_adicionar,
+        "Adicionar",
+        lambda: adicionar_extensao_interface(estado_interface),
+        COR_AZUL,
+        largura=92,
+    ).pack(side="left", padx=(6, 0))
+
+    estado_interface["frame_extensoes"] = ctk.CTkScrollableFrame(
+        container,
+        height=112,
+        fg_color=COR_CAMPO,
+        border_color=COR_BORDA,
+        border_width=1,
+        corner_radius=6,
+    )
+    estado_interface["frame_extensoes"].pack(fill="x", padx=8, pady=(0, 4))
+    atualizar_checkboxes_extensoes(estado_interface, [])
+    return estado_interface["frame_extensoes"]
+
+
+def atualizar_checkboxes_extensoes(estado_interface, extensoes_marcadas=None):
+    """Atualiza checkboxes de extensoes disponiveis."""
+    frame = estado_interface.get("frame_extensoes")
+    if frame is None:
+        return ERRO_DADOS_INVALIDOS
+
+    if extensoes_marcadas is None:
+        extensoes_marcadas = obter_extensoes_marcadas(estado_interface)
+
+    for widget in frame.winfo_children():
+        widget.destroy()
+
+    codigo, extensoes = controller.obter_extensoes_disponiveis()
+    if codigo != OK:
+        mostrar_mensagem_resultado(codigo)
+        return codigo
+
+    estado_interface["extensoes_vars"] = {}
+    extensoes_marcadas = set(extensoes_marcadas)
+
+    for indice, extensao in enumerate(extensoes):
+        var = tk.BooleanVar(value=extensao in extensoes_marcadas)
+        estado_interface["extensoes_vars"][extensao] = var
+        checkbox = ctk.CTkCheckBox(
+            frame,
+            text=extensao,
+            variable=var,
+            text_color=COR_TEXTO,
+            fg_color=COR_AZUL,
+            hover_color="#1d4ed8",
+            border_color=COR_BORDA,
+            font=FONTE_PADRAO,
+        )
+        checkbox.grid(row=indice // 3, column=indice % 3, sticky="w", padx=8, pady=4)
+
+    for coluna in range(3):
+        frame.columnconfigure(coluna, weight=1)
+
+    return OK
+
+
 def criar_area_restricoes(janela, estado_interface):
     """Cria a area de restricoes e agendamento."""
     frame = criar_painel(janela, "Restricoes e agendamento")
     frame.pack(fill="both", expand=True, side="right", padx=(4, 0), pady=8)
 
-    criar_label(frame, "Extensoes permitidas").pack(anchor="w", padx=8, pady=(8, 0))
-    estado_interface["entrada_extensoes"] = criar_entry(frame)
-    estado_interface["entrada_extensoes"].pack(fill="x", padx=8, pady=4)
+    criar_area_extensoes(frame, estado_interface)
 
     criar_label(frame, "Nome contem").pack(anchor="w", padx=8)
     estado_interface["entrada_nome_contem"] = criar_entry(frame)
@@ -454,26 +529,45 @@ def criar_area_restricoes(janela, estado_interface):
 
 def criar_area_botoes(janela, estado_interface):
     """Cria os botoes principais da interface."""
-    frame = ctk.CTkFrame(janela, fg_color=COR_PAINEL, border_color=COR_BORDA, border_width=1, corner_radius=8)
-    frame.pack(fill="x", padx=18, pady=(0, 14))
+    frame = ctk.CTkFrame(janela, fg_color="transparent")
+    frame.grid(row=0, column=1, sticky="ne", padx=(12, 0), pady=(6, 0))
 
-    criar_botao(frame, "Aplicar alteracoes", lambda: aplicar_alteracoes_interface(estado_interface), COR_AZUL).pack(
-        side="left"
+    criar_botao(
+        frame,
+        "Aplicar",
+        lambda: aplicar_alteracoes_interface(estado_interface),
+        COR_AZUL,
+        largura=92,
+    ).pack(
+        side="left", padx=(0, 6)
     )
     estado_interface["botao_backup"] = criar_botao(
         frame,
-        "Executar backup",
+        "Backup",
         lambda: executar_backup_interface(estado_interface),
         COR_VERDE,
+        largura=92,
     )
     estado_interface["botao_backup"].pack(side="left", padx=6)
-    criar_botao(frame, "Historico", lambda: mostrar_historico_interface(estado_interface)).pack(
-        side="left", padx=(0, 6)
+    criar_botao(
+        frame,
+        "Historico",
+        lambda: mostrar_historico_interface(estado_interface),
+        largura=92,
+    ).pack(
+        side="left", padx=6
     )
-    criar_botao(frame, "Visualizar arquivos", lambda: visualizar_arquivos_interface(estado_interface)).pack(
-        side="left"
+    criar_botao(
+        frame,
+        "Arquivos",
+        lambda: visualizar_arquivos_interface(estado_interface),
+        largura=92,
+    ).pack(
+        side="left", padx=6
     )
-    criar_botao(frame, "Sair", estado_interface["acao_fechar"], "#e5e7eb", "#111827").pack(side="right")
+    criar_botao(frame, "Sair", estado_interface["acao_fechar"], "#e5e7eb", "#111827", largura=76).pack(
+        side="left", padx=(6, 0)
+    )
     return frame
 
 
@@ -572,6 +666,28 @@ def adicionar_destino_interface(estado_interface):
     caminho = filedialog.askdirectory(title="Escolha a pasta de destino")
     if caminho:
         estado_interface["lista_destinos"].insert(tk.END, caminho)
+    return OK
+
+
+def adicionar_extensao_interface(estado_interface):
+    """Adiciona extensao customizada a lista disponivel."""
+    entrada = estado_interface.get("entrada_nova_extensao")
+    if entrada is None:
+        return ERRO_DADOS_INVALIDOS
+
+    extensao = entrada.get()
+    extensoes_marcadas = obter_extensoes_marcadas(estado_interface)
+    codigo = controller.adicionar_extensao_disponivel(extensao)
+    if codigo != OK:
+        mostrar_mensagem_resultado(codigo)
+        return codigo
+
+    extensao_normalizada = controller.normalizar_extensao(extensao)
+    if extensao_normalizada and extensao_normalizada not in extensoes_marcadas:
+        extensoes_marcadas.append(extensao_normalizada)
+
+    entrada.delete(0, tk.END)
+    atualizar_checkboxes_extensoes(estado_interface, extensoes_marcadas)
     return OK
 
 
@@ -698,9 +814,9 @@ def definir_estado_botao_backup(estado_interface, habilitado):
         return OK
 
     if habilitado:
-        botao.configure(text="Executar backup", state="normal")
+        botao.configure(text="Backup", state="normal")
     else:
-        botao.configure(text="Executando...", state="disabled")
+        botao.configure(text="Executando", state="disabled")
     return OK
 
 
@@ -973,7 +1089,7 @@ def obter_dados_formulario(estado_interface):
         "destinos": obter_itens_lista(estado_interface["lista_destinos"]),
         "operacao": estado_interface["operacao_var"].get(),
         "restricoes": {
-            "extensoes_permitidas": obter_extensoes(estado_interface["entrada_extensoes"].get()),
+            "extensoes_permitidas": obter_extensoes_marcadas(estado_interface),
             "nome_contem": estado_interface["entrada_nome_contem"].get().strip(),
             "tamanho_min": tamanho_min,
             "tamanho_max": tamanho_max,
@@ -1001,10 +1117,7 @@ def preencher_formulario_com_perfil(estado_interface, perfil):
     preencher_lista(estado_interface["lista_destinos"], perfil.get("destinos", []))
 
     restricoes = perfil.get("restricoes", {})
-    preencher_entry(
-        estado_interface["entrada_extensoes"],
-        ", ".join(restricoes.get("extensoes_permitidas", [])),
-    )
+    atualizar_checkboxes_extensoes(estado_interface, restricoes.get("extensoes_permitidas", []))
     preencher_entry(estado_interface["entrada_nome_contem"], restricoes.get("nome_contem", ""))
     preencher_entry(estado_interface["entrada_tamanho_min"], str(restricoes.get("tamanho_min", 0)))
 
@@ -1027,7 +1140,7 @@ def limpar_formulario(estado_interface):
     preencher_lista(estado_interface["lista_destinos"], [])
     estado_interface["operacao_var"].set("copiar")
     estado_interface["ativo_var"].set(True)
-    preencher_entry(estado_interface["entrada_extensoes"], "")
+    atualizar_checkboxes_extensoes(estado_interface, [])
     preencher_entry(estado_interface["entrada_nome_contem"], "")
     preencher_entry(estado_interface["entrada_tamanho_min"], "")
     preencher_entry(estado_interface["entrada_tamanho_max"], "")
@@ -1056,6 +1169,15 @@ def preencher_entry(entrada, valor):
     entrada.delete(0, tk.END)
     entrada.insert(0, valor)
     return OK
+
+
+def obter_extensoes_marcadas(estado_interface):
+    """Retorna extensoes marcadas no painel de checkboxes."""
+    extensoes = []
+    for extensao, var in estado_interface.get("extensoes_vars", {}).items():
+        if var.get():
+            extensoes.append(extensao)
+    return extensoes
 
 
 def obter_extensoes(texto):
